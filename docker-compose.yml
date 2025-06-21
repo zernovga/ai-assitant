@@ -1,15 +1,33 @@
+secrets:
+  TELEGRAM_BOT_TOKEN:
+    file: ./secrets/telegram_bot_token.txt
+
 services:
   bot:
-    build:
-      context: .
-      # dockerfile: ./bot/Dockerfile
     container_name: bot
+    build:
+      context: bot
+      # dockerfile: ./bot/Dockerfile
     restart: always
     environment:
       TELEGRAM_BOT_TOKEN_FILE: /run/secrets/TELEGRAM_BOT_TOKEN
     secrets:
       - TELEGRAM_BOT_TOKEN
-    
-secrets:
-  TELEGRAM_BOT_TOKEN:
-    file: ./secrets/telegram_bot_token.txt
+  agent:
+    container_name: agent
+    build:
+      context: agent
+      # dockerfile: ./agent/Dockerfile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/ping"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    expose:
+      - 80
+    restart: always
+
+# networks:
+#   default:
+#     driver: bridge
