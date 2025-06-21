@@ -1,0 +1,15 @@
+services:
+  bot:
+    build:
+      context: .
+      # dockerfile: ./bot/Dockerfile
+    container_name: bot
+    restart: always
+    environment:
+      TELEGRAM_BOT_TOKEN_FILE: /run/secrets/TELEGRAM_BOT_TOKEN
+    secrets:
+      - TELEGRAM_BOT_TOKEN
+    
+secrets:
+  TELEGRAM_BOT_TOKEN:
+    file: ./secrets/telegram_bot_token.txt

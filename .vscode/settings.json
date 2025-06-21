@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "{workspaceFolder}/bot/.venv/bin/python",
+    "taipyStudio.gUI.elementsFilePaths": []
+}
