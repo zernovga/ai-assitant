@@ -1,22 +1,6 @@
-#!/usr/bin/env python
-# pylint: disable=unused-argument
-# This program is dedicated to the public domain under the CC0 license.
-
-"""
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
 import logging
 import os
+from json import load
 
 from dotenv import load_dotenv
 from telegram import ForceReply, Message, Update, User
@@ -29,29 +13,37 @@ from telegram.ext import (
 )
 from websockets.sync.client import connect
 
-load_dotenv()
-
-if not os.getenv("TELEGRAM_BOT_TOKEN"):
-    os.environ["TELEGRAM_BOT_TOKEN"] = (
-        open("/run/secrets/TELEGRAM_BOT_TOKEN").read().strip()
-    )
-
-# Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
-# set higher logging level for httpx to avoid all GET and POST requests being logged
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
+load_dotenv()
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
+if not os.getenv("TELEGRAM_BOT_TOKEN"):
+    # os.environ["TELEGRAM_BOT_TOKEN"] = (
+    #     open("/run/secrets/TELEGRAM_BOT_TOKEN").read().strip()
+    # )
+    logger.info("Loading bot configuration from /run/secrets/bot_config")
+
+    os.environ.update(load(open("/run/secrets/bot_config")))
+
+    logger.info("Bot configuration loaded successfully.")
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user: User = update.effective_user
     message: Message = update.message
+
+    if user.id != int(os.getenv("TELEGRAM_BOT_OWNER_ID", "0")):
+        logger.info(f"{os.getenv('TELEGRAM_BOT_OWNER_ID', '0') = }, {type(user.id) = }")
+        logger.info(f"Unauthorized access attempt by user {user.id} ({user.username})")
+        await message.reply_text("You are not authorized to use this bot.")
+        return
+
     await message.reply_html(
         rf"Hi {user.mention_html()}!",
         reply_markup=ForceReply(selective=True),
@@ -60,14 +52,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    await update.message.reply_text("Help!")  # type: ignore
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Connect to agent, send the message and reply with the response."""
+    if not update.message or not update.message.text:
+        logger.error("No message found in the update.")
+        return
+
     with connect("ws://agent:80/chat") as websocket:
         websocket.send(update.message.text)
-        response = websocket.recv()
+        response = str(websocket.recv())
         await update.message.reply_text(response)
 
 
