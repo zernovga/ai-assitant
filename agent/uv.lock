@@ -8,10 +8,14 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
+    { name = "websockets" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fastapi", extras = ["standard"], specifier = ">=0.115.13" }]
+requires-dist = [
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.13" },
+    { name = "websockets", specifier = ">=15.0.1" },
+]
 
 [[package]]
 name = "annotated-types"

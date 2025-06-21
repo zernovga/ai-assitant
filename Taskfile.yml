@@ -1,0 +1,11 @@
+# https://taskfile.dev
+
+version: '3'
+
+
+tasks:
+  build_n_run:
+    cmds:
+      - docker compose build
+      - docker compose up
+    desc: Build and run the Docker Compose application

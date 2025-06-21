@@ -27,6 +27,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from websockets.sync.client import connect
 
 load_dotenv()
 
@@ -63,8 +64,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text)
+    """Connect to agent, send the message and reply with the response."""
+    with connect("ws://agent:80/chat") as websocket:
+        websocket.send(update.message.text)
+        response = websocket.recv()
+        await update.message.reply_text(response)
 
 
 def main() -> None:
