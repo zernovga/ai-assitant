@@ -7,6 +7,7 @@ services:
     container_name: bot
     build:
       context: bot
+      dockerfile: bot.Dockerfile
     restart: always
     secrets:
       - bot_config
@@ -15,6 +16,7 @@ services:
     container_name: agent
     build:
       context: agent
+      dockerfile: agent.Dockerfile
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/ping"]
       interval: 1m30s
