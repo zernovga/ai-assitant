@@ -11,7 +11,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from websockets.sync.client import connect
+from websockets.asyncio.client import connect
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -23,9 +23,6 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 if not os.getenv("TELEGRAM_BOT_TOKEN"):
-    # os.environ["TELEGRAM_BOT_TOKEN"] = (
-    #     open("/run/secrets/TELEGRAM_BOT_TOKEN").read().strip()
-    # )
     logger.info("Loading bot configuration from /run/secrets/bot_config")
 
     os.environ.update(load(open("/run/secrets/bot_config")))
@@ -61,9 +58,9 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         logger.error("No message found in the update.")
         return
 
-    with connect("ws://agent:80/chat") as websocket:
-        websocket.send(update.message.text)
-        response = str(websocket.recv())
+    async with connect("ws://agent:80/chat") as websocket:
+        await websocket.send(update.message.text)
+        response = str(await websocket.recv())
         await update.message.reply_text(response)
 
 

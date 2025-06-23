@@ -1,6 +1,36 @@
+import logging
+import os
+from contextlib import asynccontextmanager
+from json import load
+
+from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket
 
-app = FastAPI()
+from .chatbot import build_graph
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+graph = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    load_dotenv()
+    if not os.getenv("GOOGLE_API_KEY"):
+        logger.info("Loading bot configuration from /run/secrets/bot_config")
+        os.environ.update(load(open("/run/secrets/bot_config")))
+        logger.info("Bot configuration loaded successfully.")
+
+    global graph
+    graph = build_graph()
+
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/ping")
@@ -11,5 +41,13 @@ async def ping():
 @app.websocket("/chat")
 async def chat_endpoint(websocket: WebSocket):
     await websocket.accept()
-    data = await websocket.receive_text()
-    await websocket.send_text(f"Message text was: {data}")
+    user_input = await websocket.receive_text()
+    response = graph.invoke({"messages": [{"role": "user", "content": user_input}]})
+    await websocket.send_text(response["messages"][-1].content)
+    await websocket.close()
+
+
+@app.get("/chat_response")
+async def chat_response(data: str):
+    response = graph.invoke({"messages": [{"role": "user", "content": data}]})
+    return response["messages"][-1].content
