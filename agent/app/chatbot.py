@@ -25,8 +25,7 @@ class State(TypedDict):
 def build_graph():
     graph_builder = StateGraph(State)
 
-    # llm = init_chat_model("google_genai:gemini-2.0-flash")
-    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
+    llm = ChatGoogleGenerativeAI(model="gemma-3-1b-it")
 
     def chatbot(state: State):
         return {"messages": [llm.invoke(state["messages"])]}

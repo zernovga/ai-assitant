@@ -1,6 +1,8 @@
 secrets:
   bot_config:
     file: ./secrets/bot_config.json
+  agent_config:
+    file: ./secrets/agent_config.json
 
 services:
   bot:
@@ -17,6 +19,8 @@ services:
     build:
       context: agent
       dockerfile: agent.Dockerfile
+    secrets:
+      - agent_config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/ping"]
       interval: 1m30s

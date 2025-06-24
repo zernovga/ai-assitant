@@ -20,9 +20,9 @@ graph = None
 async def lifespan(app: FastAPI):
     load_dotenv()
     if not os.getenv("GOOGLE_API_KEY"):
-        logger.info("Loading bot configuration from /run/secrets/bot_config")
-        os.environ.update(load(open("/run/secrets/bot_config")))
-        logger.info("Bot configuration loaded successfully.")
+        logger.info("Loading agent configuration from /run/secrets/agent_config")
+        os.environ.update(load(open("/run/secrets/agent_config")))
+        logger.info("Agent configuration loaded successfully.")
 
     global graph
     graph = build_graph()
