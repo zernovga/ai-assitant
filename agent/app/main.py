@@ -38,11 +38,16 @@ async def ping():
     return {"message": "pong"}
 
 
+config = {"configurable": {"thread_id": "1"}}
+
+
 @app.websocket("/chat")
 async def chat_endpoint(websocket: WebSocket):
     await websocket.accept()
     user_input = await websocket.receive_text()
-    response = graph.invoke({"messages": [{"role": "user", "content": user_input}]})
+    response = graph.invoke(
+        {"messages": [{"role": "user", "content": user_input}]}, config=config
+    )
     await websocket.send_text(response["messages"][-1].content)
     await websocket.close()
 

@@ -33,4 +33,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 # CMD ["sh", "-c", "sleep 100"]
 WORKDIR /app
 
+VOLUME [ "/db" ]
+
 CMD ["fastapi", "run", "--host", "0.0.0.0", "--port", "80"]
